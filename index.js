@@ -7,6 +7,9 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
 
+const userRouter = require("./routes/users");
+app.use("/users", userRouter);
+
 app.listen(3001, () => {
-    console.log("Server running on port 3001")
+    console.log("Server running on port 3001");
 });
