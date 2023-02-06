@@ -42,7 +42,6 @@ router.post("/registerUser", async(req, res) => {
             else {
                 await pool.query("INSERT INTO user (email, username, password) VALUES (?, ?, ?)", [email, username, hashedPassword]);
                 const [user] = await pool.query("SELECT * FROM user WHERE email = ?", [email]);
-                console.log(user);
                 const accessToken = sign({
                     id: user[0].userID,
                     email: user[0].email,
@@ -65,10 +64,10 @@ router.post("/login", async(req, res) => {
         const {email, password} = req.body;
 
         const [user] = await pool.query("SELECT * FROM user WHERE email = ?", [email]);
-        if(user.length === 0) res.status(404).json({message: "A user with that email does not exist"});
+        if(user.length === 0) res.status(404).json({message: "A user with that email does not exist", errorType: "noEmail"});
         else {
             const matching = await bcrypt.compare(password, user[0].password);
-            if(!matching) res.status(403).json({message: "Wrong Email or password combination"});
+            if(!matching) res.status(404).json({message: "Wrong Email or password combination", errorType: "wrongComb"});
             else {
                 const accessToken = sign({
                     id: user[0].userID,
