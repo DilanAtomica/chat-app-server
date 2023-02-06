@@ -41,7 +41,18 @@ router.post("/registerUser", async(req, res) => {
             }
             else {
                 await pool.query("INSERT INTO user (email, username, password) VALUES (?, ?, ?)", [email, username, hashedPassword]);
-                res.status(200).json("Successfully registered!");
+                const [user] = await pool.query("SELECT * FROM user WHERE email = ?", [email]);
+                console.log(user);
+                const accessToken = sign({
+                    id: user[0].userID,
+                    email: user[0].email,
+                    username: user[0].username
+                }, "jwtsecretplschange");
+
+                res.cookie("accessToken", accessToken, {
+                    maxAge: 60*60*24*30*1000,
+                    httpOnly: true,
+                }).status(200).json({message: "Successfully registered!"});
             }
 
     } catch (error) {
@@ -52,11 +63,10 @@ router.post("/registerUser", async(req, res) => {
 router.post("/login", async(req, res) => {
     try {
         const {email, password} = req.body;
+
         const [user] = await pool.query("SELECT * FROM user WHERE email = ?", [email]);
-        console.log(user[0].password);
         if(user.length === 0) res.status(404).json({message: "A user with that email does not exist"});
         else {
-            console.log("here");
             const matching = await bcrypt.compare(password, user[0].password);
             if(!matching) res.status(403).json({message: "Wrong Email or password combination"});
             else {
@@ -80,11 +90,9 @@ router.post("/login", async(req, res) => {
 
 router.post("/auth", validateToken, async(req, res) => {
     if(req.authenticated) {
-        const [user] = await pool.query("SELECT * FROM user WHERE email = ?", [req.tokenData.email]);
-        const userData = {id: user.id, email: user.email, username: user.username};
-        res.status(200).json(userData);
+        res.status(200).json({authenticated: true});
     } else {
-        res.json(null)
+        res.status(200).json({authenticated: false});
     }
 });
 
