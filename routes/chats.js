@@ -33,6 +33,7 @@ router.post("/activeChatQueues", validateToken, async(req, res) => {
             const series = await axios.get("https://api.themoviedb.org/3/tv/" + result[0][i].seriesID +
                 "?api_key=cd84bfb51d317868c15507e4f531548f&language=en-US)");
             let showInfo = {
+                chatQueueID: result[0][i].chat_queueID,
                 seriesID: result[0][i].seriesID,
                 name: series.data.name,
                 image: series.data.backdrop_path,
@@ -43,6 +44,18 @@ router.post("/activeChatQueues", validateToken, async(req, res) => {
             shows = [...shows, showInfo];
         }
         res.status(200).json(shows);
+    } catch(error) {
+        res.status(404).json({message: "Something went wrong"});
+    }
+});
+
+router.post("/deleteChatQueue", validateToken, async(req, res) => {
+    try {
+        const {chatQueueID} = req.body;
+        console.log(req.body);
+        await pool.query("DELETE FROM chat_queue WHERE chat_queueID = ?",
+            [chatQueueID]);
+        res.status(200).json({message: "Success!"});
     } catch(error) {
         res.status(404).json({message: "Something went wrong"});
     }
