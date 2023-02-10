@@ -27,16 +27,17 @@ router.post("/chatQueue", validateToken, async(req, res) => {
             const series = await axios.get("https://api.themoviedb.org/3/tv/" + seriesID +
                 "?api_key=cd84bfb51d317868c15507e4f531548f&language=en-US)");
 
-            await pool.query("INSERT INTO chat (seriesName, seriesEpisode, seriesSeason) VALUES (?, ?, ?)",
-                [series.data.name, episode, season]);
+            await pool.query("INSERT INTO chat (seriesName, seriesEpisode, seriesSeason, seriesImage) VALUES (?, ?, ?, ?)",
+                [series.data.name, episode, season, series.data.backdrop_path]);
 
             const result = await pool.query(
-                "SELECT chatID FROM chat WHERE (seriesName, seriesEpisode, seriesSeason) = (?, ?, ?) ORDER BY created_at ASC LIMIT 1",
-                [series.data.name, episode, season]);
+                "SELECT chatID FROM chat WHERE (seriesName, seriesEpisode, seriesSeason, seriesImage) = (?, ?, ?, ?) ORDER BY created_at ASC LIMIT 1",
+                [series.data.name, episode, season, series.data.backdrop_path]);
 
             //Insert both users in chatters table
             await pool.query("INSERT INTO chatters (userID, chatID) VALUES (?, ?)",
                 [req.tokenData.id, result[0][0].chatID]);
+
             await pool.query("INSERT INTO chatters (userID, chatID) VALUES (?, ?)",
                 [existingQueue[0][0].userID, result[0][0].chatID]);
 
@@ -82,7 +83,6 @@ router.post("/activeChatQueues", validateToken, async(req, res) => {
 router.post("/deleteChatQueue", validateToken, async(req, res) => {
     try {
         const {chatQueueID} = req.body;
-        console.log(req.body);
         await pool.query("DELETE FROM chat_queue WHERE chat_queueID = ?",
             [chatQueueID]);
         res.status(200).json({message: "Success!"});
@@ -90,6 +90,38 @@ router.post("/deleteChatQueue", validateToken, async(req, res) => {
         res.status(404).json({message: "Something went wrong"});
     }
 });
+
+router.post("/chatsData", validateToken, async(req, res) => {
+    try {
+
+        const result = await pool.query("SELECT chatID FROM chatters WHERE userID = ?",
+            [req.tokenData.id]);
+
+        const {chatID} = result[0][0];
+        console.log(result[0]);
+        let chats = [];
+        for(let j = 0; j < result[0].length; j++) {
+            const chat = await pool.query("SELECT * FROM chat WHERE chatID = ?",
+                [result[0][j].chatID]);
+            chats = [...chats, chat[0][0]];
+        }
+        console.log(chats);
+
+        for(let i = 0; i < chats.length; i++) {
+            const chatter = await pool.query("SELECT userID FROM chatters WHERE chatID = ? AND NOT userID = ? LIMIT 1",
+                [chatID, req.tokenData.id]);
+
+            const otherUserData = await pool.query("SELECT username FROM user WHERE userID = ?",
+                [chatter[0][0].userID]);
+
+            chats[i] = {...chats[i], otherUserName: otherUserData[0][0].username}
+        }
+        res.status(200).json(chats);
+    } catch(error) {
+        res.status(404).json({message: "Something went wrong"});
+    }
+});
+
 
 
 
