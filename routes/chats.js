@@ -15,9 +15,39 @@ const pool = mysql.createPool({
 router.post("/chatQueue", validateToken, async(req, res) => {
     try {
         const {seriesID, season, episode} = req.body;
-        await pool.query("INSERT INTO chat_queue (userID, seriesID, season, episode) VALUES (?, ?, ?, ?)",
-            [req.tokenData.id, seriesID, season, episode]);
-        res.status(200).json({message: "Success!"});
+
+        const existingQueue = await pool.query(
+            "SELECT * FROM chat_queue WHERE (seriesID, season, episode) = (?, ?, ?) ORDER BY created_at ASC LIMIT 1",
+            [seriesID, season, episode]);
+
+        if(existingQueue[0].length === 1) {
+
+            await pool.query("DELETE FROM chat_queue WHERE chat_queueID = ?", [existingQueue[0][0].chat_queueID]);
+
+            const series = await axios.get("https://api.themoviedb.org/3/tv/" + seriesID +
+                "?api_key=cd84bfb51d317868c15507e4f531548f&language=en-US)");
+
+            await pool.query("INSERT INTO chat (seriesName, seriesEpisode, seriesSeason) VALUES (?, ?, ?)",
+                [series.data.name, episode, season]);
+
+            const result = await pool.query(
+                "SELECT chatID FROM chat WHERE (seriesName, seriesEpisode, seriesSeason) = (?, ?, ?) ORDER BY created_at ASC LIMIT 1",
+                [series.data.name, episode, season]);
+
+            //Insert both users in chatters table
+            await pool.query("INSERT INTO chatters (userID, chatID) VALUES (?, ?)",
+                [req.tokenData.id, result[0][0].chatID]);
+            await pool.query("INSERT INTO chatters (userID, chatID) VALUES (?, ?)",
+                [existingQueue[0][0].userID, result[0][0].chatID]);
+
+            res.status(200).json({message: "Success!"});
+        } else {
+            await pool.query("INSERT INTO chat_queue (userID, seriesID, season, episode) VALUES (?, ?, ?, ?)",
+                [req.tokenData.id, seriesID, season, episode]);
+            res.status(200).json({message: "Success!"});
+        }
+
+
     } catch(error) {
         res.status(404).json({message: "Something went wrong"});
     }
