@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const {validateToken} = require("../JWT");
 const axios = require("axios");
-
 const mysql = require("mysql2");
 
 const pool = mysql.createPool({
@@ -144,6 +143,10 @@ router.post("/chatData", validateToken, async(req, res) => {
                 if(messagesResult[0][i].userID === req.tokenData.id) {
                     messagesResult[0][i] = {...messagesResult[0][i], messageSent: true}
                 } else messagesResult[0][i] = {...messagesResult[0][i], messageSent: false}
+
+                const formatDate = new Date(messagesResult[0][i].created_at);
+                const dateSent = formatDate.getDate() + "." + formatDate.getMonth() + 1 + "." + formatDate.getFullYear();
+                messagesResult[0][i] = {...messagesResult[0][i], dateSent: dateSent}
             }
             chatResult[0][0] = {...chatResult[0][0], messages: messagesResult[0]};
         };
