@@ -13,6 +13,18 @@ const pool = mysql.createPool({
     database: "chatapp",
 }).promise();
 
+router.post("/userDetails", validateToken, async(req, res) => {
+    try {
+        const userDetails = await pool.query("SELECT userID, username, email FROM user WHERE userID = ? LIMIT 1",
+            [req.tokenData.id]);
+        res.status(200).json(userDetails[0][0]);
+    } catch (error) {
+        res.status(400).json({error: error});
+    }
+
+});
+
+
 
 router.post("/registerUser", async(req, res) => {
     try {

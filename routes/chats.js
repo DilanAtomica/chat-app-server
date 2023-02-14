@@ -21,7 +21,7 @@ router.post("/chatQueue", validateToken, async(req, res) => {
 
 
         if((existingQueue[0].length === 1 && existingQueue[0][0].userID === req.tokenData.id)) {
-            res.status(409).json({message: "You are already in queue for this"});
+            res.status(409).json({message: "Already queued"});
         }
 
         else if(existingQueue[0].length === 1) {
@@ -45,6 +45,11 @@ router.post("/chatQueue", validateToken, async(req, res) => {
             await pool.query("INSERT INTO chatters (userID, chatID) VALUES (?, ?)",
                 [existingQueue[0][0].userID, result[0][0].chatID]);
 
+            //Send notification to other user
+            const notificationText = "A chat for a dicussion of " + series.data.name + " season " + season + ", episode " + episode + " has been made";
+            await pool.query("INSERT INTO notifications (userID, notificMsg) VALUES (?, ?)",
+                [existingQueue[0][0].userID, notificationText]);
+
             res.status(200).json({message: "Success!"});
         } else {
             await pool.query("INSERT INTO chat_queue (userID, seriesID, season, episode) VALUES (?, ?, ?, ?)",
@@ -60,7 +65,7 @@ router.post("/chatQueue", validateToken, async(req, res) => {
 
 router.post("/activeChatQueues", validateToken, async(req, res) => {
     try {
-        const result = await pool.query("SELECT * FROM chat_queue WHERE userID = ?",
+        const result = await pool.query("SELECT * FROM chat_queue WHERE userID = ? ORDER BY created_at DESC",
             [req.tokenData.id]);
         let shows = [];
 
@@ -176,6 +181,17 @@ router.post("/message", validateToken, async(req, res) => {
         res.status(404).json({message: "Something went wrong"});
     }
 });
+
+router.post("/notifications", validateToken, async(req, res) => {
+    try {
+        const notifications = await pool.query("SELECT * FROM notifications WHERE userID = ? ORDER BY created_at DESC",
+            [req.tokenData.id]);
+        res.status(200).json(notifications[0]);
+    } catch(error) {
+        res.status(404).json({message: "Something went wrong"});
+    }
+});
+
 
 
 
