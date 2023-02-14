@@ -16,10 +16,15 @@ router.post("/chatQueue", validateToken, async(req, res) => {
         const {seriesID, season, episode} = req.body;
 
         const existingQueue = await pool.query(
-            "SELECT * FROM chat_queue WHERE (seriesID, season, episode) = (?, ?, ?) ORDER BY created_at ASC LIMIT 1",
+            "SELECT * FROM chat_queue WHERE (seriesID, season, episode) = (?, ?, ?) LIMIT 1",
             [seriesID, season, episode]);
 
-        if(existingQueue[0].length === 1) {
+
+        if((existingQueue[0].length === 1 && existingQueue[0][0].userID === req.tokenData.id)) {
+            res.status(409).json({message: "You are already in queue for this"});
+        }
+
+        else if(existingQueue[0].length === 1) {
 
             await pool.query("DELETE FROM chat_queue WHERE chat_queueID = ?", [existingQueue[0][0].chat_queueID]);
 
