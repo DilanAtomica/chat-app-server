@@ -170,8 +170,6 @@ router.post("/chatData", validateToken, async(req, res) => {
 router.post("/message", validateToken, async(req, res) => {
     try {
         const {chatID, text} = req.body.messageData;
-        console.log(text);
-        console.log(req.body);
 
         await pool.query("INSERT INTO messages (chatID, userID, message) VALUES (?, ?, ?)",
             [chatID, req.tokenData.id, text]);
@@ -191,6 +189,20 @@ router.post("/notifications", validateToken, async(req, res) => {
         res.status(404).json({message: "Something went wrong"});
     }
 });
+
+router.post("/readNotification", validateToken, async(req, res) => {
+    try {
+        const {notificID, isRead} = req.body.openNotificData;
+        if(isRead ===  1) {
+            await pool.query("UPDATE notifications SET isRead = ? WHERE notificID = ?",
+                [1, notificID]);
+            res.status(200).json({message: "Successfully read!"});
+        } else res.status(200).json({message: "Notification already read!"});
+    } catch(error) {
+        res.status(404).json({message: "Something went wrong"});
+    }
+});
+
 
 
 
