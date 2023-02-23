@@ -180,6 +180,20 @@ router.post("/message", validateToken, async(req, res) => {
     }
 });
 
+router.post("/leaveChat", validateToken, async(req, res) => {
+    try {
+        const {chatID} = req.body;
+        console.log(chatID);
+        await pool.query("DELETE FROM chat WHERE chatID = ?",
+            [chatID]);
+        console.log("hey");
+
+        res.status(200).json({message: "Success!"});
+    } catch(error) {
+        res.status(404).json({message: "Something went wrong"});
+    }
+});
+
 router.post("/notifications", validateToken, async(req, res) => {
     try {
         const notifications = await pool.query("SELECT * FROM notifications WHERE userID = ? ORDER BY created_at DESC",
