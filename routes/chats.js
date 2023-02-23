@@ -46,7 +46,7 @@ router.post("/chatQueue", validateToken, async(req, res) => {
                 [existingQueue[0][0].userID, result[0][0].chatID]);
 
             //Send notification to other user
-            const notificationText = "A chat for a dicussion of " + series.data.name + " season " + season + ", episode " + episode + " has been made";
+            const notificationText = "A chat for a dicussion of " + series.data.name + " season " + season + ", episode " + episode + " has been made, you can find it in the chat page";
             await pool.query("INSERT INTO notifications (userID, notificMsg) VALUES (?, ?)",
                 [existingQueue[0][0].userID, notificationText]);
 

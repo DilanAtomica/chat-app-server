@@ -107,4 +107,9 @@ router.post("/auth", validateToken, async(req, res) => {
     }
 });
 
+router.post("/logout", validateToken, async(req, res) => {
+    res.clearCookie("accessToken");
+    res.status(200).json("Successfully logged out!");
+});
+
 module.exports = router;
