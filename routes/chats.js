@@ -19,8 +19,18 @@ router.post("/chatQueue", validateToken, async(req, res) => {
             "SELECT * FROM chat_queue WHERE (seriesID, season, episode) = (?, ?, ?) LIMIT 1",
             [seriesID, season, episode]);
 
+        const existingChats = await pool.query("SELECT chatID FROM chatters WHERE (userID) = (?)", [req.tokenData.id]);
 
-        if((existingQueue[0].length === 1 && existingQueue[0][0].userID === req.tokenData.id)) {
+        let chatAlreadyCreated = false;
+        for(let i = 0; i < existingChats[0].length; i++) {
+            const chat = await pool.query("SELECT chatID FROM chat WHERE chatID = ? AND seriesID = ? AND seriesSeason = ? AND seriesEpisode = ?",
+                [existingChats[0][i].chatID, seriesID, season, episode]);
+            if(chat[0].length !== 0) chatAlreadyCreated = true;
+        }
+
+        if(chatAlreadyCreated) res.status(409).json({message: "Already have chat"});
+
+        else if((existingQueue[0].length === 1 && existingQueue[0][0].userID === req.tokenData.id)) {
             res.status(409).json({message: "Already queued"});
         }
 
@@ -31,8 +41,8 @@ router.post("/chatQueue", validateToken, async(req, res) => {
             const series = await axios.get("https://api.themoviedb.org/3/tv/" + seriesID +
                 "?api_key=cd84bfb51d317868c15507e4f531548f&language=en-US)");
 
-            await pool.query("INSERT INTO chat (seriesName, seriesEpisode, seriesSeason, seriesImage) VALUES (?, ?, ?, ?)",
-                [series.data.name, episode, season, series.data.backdrop_path]);
+            await pool.query("INSERT INTO chat (seriesName, seriesEpisode, seriesSeason, seriesImage, seriesID) VALUES (?, ?, ?, ?, ?)",
+                [series.data.name, episode, season, series.data.backdrop_path, seriesID]);
 
             const result = await pool.query(
                 "SELECT chatID FROM chat WHERE (seriesName, seriesEpisode, seriesSeason, seriesImage) = (?, ?, ?, ?) ORDER BY created_at ASC LIMIT 1",
@@ -210,7 +220,6 @@ router.post("/notifications", validateToken, async(req, res) => {
 
 router.post("/readNotification", validateToken, async(req, res) => {
     try {
-        console.log("halla LOL")
         const {notificID, isRead} = req.body.openNotificData;
         if(isRead ===  0) {
             await pool.query("UPDATE notifications SET isRead = ? WHERE notificID = ?",
