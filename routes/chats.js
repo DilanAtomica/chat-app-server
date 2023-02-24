@@ -102,29 +102,31 @@ router.post("/deleteChatQueue", validateToken, async(req, res) => {
 
 router.post("/chatsData", validateToken, async(req, res) => {
     try {
-
         const result = await pool.query("SELECT chatID FROM chatters WHERE userID = ?",
             [req.tokenData.id]);
 
-        const {chatID} = result[0][0];
+        if(result[0].length === 0) res.status(200).json(null);
 
-        let chats = [];
-        for(let j = 0; j < result[0].length; j++) {
-            const chat = await pool.query("SELECT * FROM chat WHERE chatID = ?",
-                [result[0][j].chatID]);
-            chats = [...chats, chat[0][0]];
+        else {
+            const {chatID} = result[0][0];
+            let chats = [];
+            for(let j = 0; j < result[0].length; j++) {
+                const chat = await pool.query("SELECT * FROM chat WHERE chatID = ?",
+                    [result[0][j].chatID]);
+                chats = [...chats, chat[0][0]];
+            }
+            for(let i = 0; i < chats.length; i++) {
+                const chatter = await pool.query("SELECT userID FROM chatters WHERE chatID = ? AND NOT userID = ? LIMIT 1",
+                    [chatID, req.tokenData.id]);
+
+                const otherUserData = await pool.query("SELECT username FROM user WHERE userID = ?",
+                    [chatter[0][0].userID]);
+
+                chats[i] = {...chats[i], otherUserName: otherUserData[0][0].username}
+            }
+
+            res.status(200).json(chats);
         }
-
-        for(let i = 0; i < chats.length; i++) {
-            const chatter = await pool.query("SELECT userID FROM chatters WHERE chatID = ? AND NOT userID = ? LIMIT 1",
-                [chatID, req.tokenData.id]);
-
-            const otherUserData = await pool.query("SELECT username FROM user WHERE userID = ?",
-                [chatter[0][0].userID]);
-
-            chats[i] = {...chats[i], otherUserName: otherUserData[0][0].username}
-        }
-        res.status(200).json(chats);
     } catch(error) {
         res.status(404).json({message: "Something went wrong"});
     }
@@ -137,31 +139,36 @@ router.post("/chatData", validateToken, async(req, res) => {
         const chatResult = await pool.query("SELECT * FROM chat WHERE chatID = ?",
             [chatID]);
 
-        const chatter = await pool.query("SELECT userID FROM chatters WHERE chatID = ? AND NOT userID = ? LIMIT 1",
-            [chatID, req.tokenData.id]);
+        if(chatResult[0].length === 0) res.status(200).json(null);
 
-        const otherUserData = await pool.query("SELECT username FROM user WHERE userID = ?",
-            [chatter[0][0].userID]);
+        else {
+            const chatter = await pool.query("SELECT userID FROM chatters WHERE chatID = ? AND NOT userID = ? LIMIT 1",
+                [chatID, req.tokenData.id]);
 
-        chatResult[0][0] = {...chatResult[0][0], otherUserName: otherUserData[0][0].username};
+            const otherUserData = await pool.query("SELECT username FROM user WHERE userID = ?",
+                [chatter[0][0].userID]);
 
-        const messagesResult = await pool.query("SELECT * FROM messages WHERE chatID = ? ORDER BY created_at DESC",
-            [chatID]);
+            chatResult[0][0] = {...chatResult[0][0], otherUserName: otherUserData[0][0].username};
 
-        if(messagesResult[0]) {
-            for(let i = 0; i < messagesResult[0].length; i++) {
-                if(messagesResult[0][i].userID === req.tokenData.id) {
-                    messagesResult[0][i] = {...messagesResult[0][i], messageSent: true}
-                } else messagesResult[0][i] = {...messagesResult[0][i], messageSent: false}
+            const messagesResult = await pool.query("SELECT * FROM messages WHERE chatID = ? ORDER BY created_at DESC",
+                [chatID]);
 
-                const formatDate = new Date(messagesResult[0][i].created_at);
-                const dateSent = formatDate.getDate() + "." + formatDate.getMonth() + 1 + "." + formatDate.getFullYear();
-                messagesResult[0][i] = {...messagesResult[0][i], dateSent: dateSent}
-            }
-            chatResult[0][0] = {...chatResult[0][0], messages: messagesResult[0]};
-        };
+            if(messagesResult[0]) {
+                for(let i = 0; i < messagesResult[0].length; i++) {
+                    if(messagesResult[0][i].userID === req.tokenData.id) {
+                        messagesResult[0][i] = {...messagesResult[0][i], messageSent: true}
+                    } else messagesResult[0][i] = {...messagesResult[0][i], messageSent: false}
 
-        res.status(200).json(chatResult[0][0]);
+                    const formatDate = new Date(messagesResult[0][i].created_at);
+                    const dateSent = formatDate.getDate() + "." + formatDate.getMonth() + 1 + "." + formatDate.getFullYear();
+                    messagesResult[0][i] = {...messagesResult[0][i], dateSent: dateSent}
+                }
+                chatResult[0][0] = {...chatResult[0][0], messages: messagesResult[0]};
+            };
+
+            res.status(200).json(chatResult[0][0]);
+        }
+
     } catch(error) {
         res.status(404).json({message: "Something went wrong"});
     }
@@ -183,11 +190,8 @@ router.post("/message", validateToken, async(req, res) => {
 router.post("/leaveChat", validateToken, async(req, res) => {
     try {
         const {chatID} = req.body;
-        console.log(chatID);
         await pool.query("DELETE FROM chat WHERE chatID = ?",
             [chatID]);
-        console.log("hey");
-
         res.status(200).json({message: "Success!"});
     } catch(error) {
         res.status(404).json({message: "Something went wrong"});
@@ -206,8 +210,9 @@ router.post("/notifications", validateToken, async(req, res) => {
 
 router.post("/readNotification", validateToken, async(req, res) => {
     try {
+        console.log("halla LOL")
         const {notificID, isRead} = req.body.openNotificData;
-        if(isRead ===  1) {
+        if(isRead ===  0) {
             await pool.query("UPDATE notifications SET isRead = ? WHERE notificID = ?",
                 [1, notificID]);
             res.status(200).json({message: "Successfully read!"});
