@@ -14,7 +14,7 @@ const mysql = require("mysql2");
 }).promise();
 
  */
-const pool = mysql.createConnection("mysql://x671yzlultf0wbmygj1f:pscale_pw_pcyUFcv1ELgkQbbEaOoSQlcanFDZ7VIMHS45hmvbJyd@aws.connect.psdb.cloud/chatapp?ssl={\"rejectUnauthorized\":true}").promise();
+const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
 
 
 router.post("/searchResult", validateToken, async(req, res) => {

@@ -5,6 +5,7 @@ const {validateToken} = require("../JWT");
 const {sign} = require("jsonwebtoken");
 
 const mysql = require("mysql2");
+require('dotenv').config()
 
 /*const pool = mysql.createPool({
     host: "127.0.0.1",
@@ -14,7 +15,7 @@ const mysql = require("mysql2");
 }).promise();
 
  */
-const pool = mysql.createConnection("mysql://x671yzlultf0wbmygj1f:pscale_pw_pcyUFcv1ELgkQbbEaOoSQlcanFDZ7VIMHS45hmvbJyd@aws.connect.psdb.cloud/chatapp?ssl={\"rejectUnauthorized\":true}").promise();
+const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
 
 router.post("/userDetails", validateToken, async(req, res) => {
     try {
