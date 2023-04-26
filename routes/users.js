@@ -6,12 +6,15 @@ const {sign} = require("jsonwebtoken");
 
 const mysql = require("mysql2");
 
-const pool = mysql.createPool({
+/*const pool = mysql.createPool({
     host: "127.0.0.1",
     user: "root",
     password: "",
     database: "chatapp",
 }).promise();
+
+ */
+const pool = mysql.createConnection("mysql://x671yzlultf0wbmygj1f:pscale_pw_pcyUFcv1ELgkQbbEaOoSQlcanFDZ7VIMHS45hmvbJyd@aws.connect.psdb.cloud/chatapp?ssl={\"rejectUnauthorized\":true}").promise();
 
 router.post("/userDetails", validateToken, async(req, res) => {
     try {
