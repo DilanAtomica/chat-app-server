@@ -95,6 +95,8 @@ router.post("/login", async(req, res) => {
                     maxAge: 60*60*24*30*1000,
                     httpOnly: true,
                     sameSite: "none",
+                    secure: true,
+                    path: "/",
                 }).status(200).json({message: "Logged in Successfully!"});
             }
         }
