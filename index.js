@@ -5,7 +5,21 @@ const cookieParser = require("cookie-parser");
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: true, credentials: true }));
+
+const corsOptions = {
+    origin: true,
+    credentials: true,
+  optionSuccessStatus: 200,
+  Headers: true,
+  exposedHeaders: 'Set-Cookie',
+  methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Access-Control-Allow-Origin',
+    'Content-Type',
+    'Authorization'
+  ]
+};
+app.use(cors(corsOptions));
 
 const userRouter = require("./routes/users");
 const showsRouter = require("./routes/shows");
