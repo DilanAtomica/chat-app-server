@@ -97,7 +97,6 @@ router.post("/login", async(req, res) => {
                     secure: true,
                     sameSite: "none",
                     domain: "chat-app-ta3s.onrender.com",
-                    path: "/",
                 }).status(200).json({message: "Logged in Successfully!"});
             }
         }
