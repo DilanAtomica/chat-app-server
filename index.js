@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 const corsOptions = {
-    origin: true,
+    origin: "https://chat-app-ta3s.onrender.com/",
     credentials: true,
   optionSuccessStatus: 200,
   Headers: true,
