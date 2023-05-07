@@ -96,6 +96,7 @@ router.post("/login", async(req, res) => {
                     httpOnly: true,
                     secure: true,
                     sameSite: "none",
+                    domain: ".onrender.com",
                 }).status(200).json({message: "Logged in Successfully!"});
             }
         }
@@ -114,7 +115,7 @@ router.post("/auth", validateToken, async(req, res) => {
 });
 
 router.post("/logout", validateToken, async(req, res) => {
-    res.clearCookie("accessToken", {domain: "chat-app-server-8rto.onrender.com", path: "/"});
+    res.clearCookie("accessToken", {domain: ".onrender.com", path: "/"});
     res.status(200).json("Successfully logged out!");
 });
 
