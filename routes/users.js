@@ -7,17 +7,15 @@ const {sign} = require("jsonwebtoken");
 const mysql = require("mysql2");
 require('dotenv').config()
 
-/*const pool = mysql.createPool({
+const pool = mysql.createPool({
     host: "127.0.0.1",
     user: "root",
     password: "",
     database: "chatapp",
 }).promise();
 
- */
 
-
-const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
+//const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
 
 router.get("/userDetails", validateToken, async(req, res) => {
     try {
