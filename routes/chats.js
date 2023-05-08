@@ -4,14 +4,16 @@ const {validateToken} = require("../JWT");
 const axios = require("axios");
 const mysql = require("mysql2");
 
-const pool = mysql.createPool({
+/*const pool = mysql.createPool({
     host: "127.0.0.1",
     user: "root",
     password: "",
     database: "chatapp",
 }).promise();
 
-//const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
+ */
+
+const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
 
 router.post("/chatQueue", validateToken, async(req, res) => {
     try {
