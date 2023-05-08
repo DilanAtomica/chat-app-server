@@ -4,16 +4,14 @@ const {validateToken} = require("../JWT");
 const axios = require("axios");
 const mysql = require("mysql2");
 
-
-/*const pool = mysql.createPool({
+const pool = mysql.createPool({
     host: "127.0.0.1",
     user: "root",
     password: "",
     database: "chatapp",
 }).promise();
 
- **/
-const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
+//const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
 
 router.post("/chatQueue", validateToken, async(req, res) => {
     try {
@@ -77,7 +75,7 @@ router.post("/chatQueue", validateToken, async(req, res) => {
     }
 });
 
-router.post("/activeChatQueues", validateToken, async(req, res) => {
+router.get("/activeChatQueues", validateToken, async(req, res) => {
     try {
         const result = await pool.query("SELECT * FROM chat_queue WHERE userID = ? ORDER BY created_at DESC",
             [req.tokenData.id]);
@@ -103,9 +101,9 @@ router.post("/activeChatQueues", validateToken, async(req, res) => {
     }
 });
 
-router.post("/deleteChatQueue", validateToken, async(req, res) => {
+router.delete("/deleteChatQueue", validateToken, async(req, res) => {
     try {
-        const {chatQueueID} = req.body;
+        const {chatQueueID} = req.query;
         await pool.query("DELETE FROM chat_queue WHERE chat_queueID = ?",
             [chatQueueID]);
         res.status(200).json({message: "Success!"});
@@ -114,7 +112,7 @@ router.post("/deleteChatQueue", validateToken, async(req, res) => {
     }
 });
 
-router.post("/chatsData", validateToken, async(req, res) => {
+router.get("/chatsData", validateToken, async(req, res) => {
     try {
         const result = await pool.query("SELECT chatID FROM chatters WHERE userID = ?",
             [req.tokenData.id]);
@@ -146,9 +144,9 @@ router.post("/chatsData", validateToken, async(req, res) => {
     }
 });
 
-router.post("/chatData", validateToken, async(req, res) => {
+router.get("/chatData", validateToken, async(req, res) => {
     try {
-        const {chatID} = req.body;
+        const {chatID} = req.query;
 
         const chatResult = await pool.query("SELECT * FROM chat WHERE chatID = ?",
             [chatID]);
@@ -203,7 +201,7 @@ router.post("/message", validateToken, async(req, res) => {
 
 router.post("/leaveChat", validateToken, async(req, res) => {
     try {
-        const {chatID} = req.body;
+        const {chatID} = req.query;
         await pool.query("DELETE FROM chat WHERE chatID = ?",
             [chatID]);
         res.status(200).json({message: "Success!"});
@@ -212,7 +210,7 @@ router.post("/leaveChat", validateToken, async(req, res) => {
     }
 });
 
-router.post("/notifications", validateToken, async(req, res) => {
+router.get("/notifications", validateToken, async(req, res) => {
     try {
         const notifications = await pool.query("SELECT * FROM notifications WHERE userID = ? ORDER BY created_at DESC",
             [req.tokenData.id]);
@@ -222,7 +220,7 @@ router.post("/notifications", validateToken, async(req, res) => {
     }
 });
 
-router.post("/readNotification", validateToken, async(req, res) => {
+router.put("/readNotification", validateToken, async(req, res) => {
     try {
         const {notificID, isRead} = req.body.openNotificData;
         if(isRead ===  0) {

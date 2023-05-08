@@ -7,17 +7,17 @@ const {sign} = require("jsonwebtoken");
 const mysql = require("mysql2");
 require('dotenv').config()
 
-/*const pool = mysql.createPool({
+const pool = mysql.createPool({
     host: "127.0.0.1",
     user: "root",
     password: "",
     database: "chatapp",
 }).promise();
 
- */
-const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
 
-router.post("/userDetails", validateToken, async(req, res) => {
+//const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
+
+router.get("/userDetails", validateToken, async(req, res) => {
     try {
         const userDetails = await pool.query("SELECT userID, username, email FROM user WHERE userID = ? LIMIT 1",
             [req.tokenData.id]);
@@ -105,7 +105,7 @@ router.post("/login", async(req, res) => {
 
 });
 
-router.post("/auth", validateToken, async(req, res) => {
+router.get("/auth", validateToken, async(req, res) => {
     if(req.authenticated) {
         res.status(200).json({authenticated: true});
     } else {
@@ -114,7 +114,7 @@ router.post("/auth", validateToken, async(req, res) => {
 });
 
 router.post("/logout", validateToken, async(req, res) => {
-    res.clearCookie("accessToken", {domain: "chat-app-server-8rto.onrender.com", path: "/"});
+    res.clearCookie("accessToken");
     res.status(200).json("Successfully logged out!");
 });
 
