@@ -2,23 +2,8 @@ const express = require("express");
 const router = express.Router();
 const {validateToken} = require("../JWT");
 const axios = require("axios");
-const mysql = require("mysql2");
 const { validationResult, query, checkSchema } = require('express-validator');
 const {searchValidation} = require("../validationSchemas");
-
-
-/*const pool = mysql.createPool({
-    host: "127.0.0.1",
-    user: "root",
-    password: "",
-    database: "chatapp",
-}).promise();
-
- */
-
-
-const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
-
 
 router.get("/searchResult", checkSchema(searchValidation, ["query"]), validateToken, async(req, res) => {
         try {

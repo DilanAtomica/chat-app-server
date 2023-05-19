@@ -214,6 +214,12 @@ router.delete("/leaveChat", validateToken, async(req, res) => {
             const {chatID} = req.query;
             await pool.query("DELETE FROM chat WHERE chatID = ?",
                 [chatID]);
+
+            await pool.query("DELETE FROM messages WHERE chatID = ?",
+                [chatID]);
+
+            await pool.query("DELETE FROM chatters WHERE chatID = ?",
+                [chatID]);
             res.status(200).json({message: "Success!"});
     } catch(error) {
         res.status(404).json({message: "Something went wrong"});
