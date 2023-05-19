@@ -10,15 +10,6 @@ app.use(cookieParser());
 const corsOptions = {
   origin: true,
   credentials: true,
-  optionSuccessStatus: 200,
-  Headers: true,
-  exposedHeaders: 'Set-Cookie',
-  methods: ['GET', 'PUT', 'POST', 'DELETE'],
-  allowedHeaders: [
-    'Access-Control-Allow-Origin',
-    'Content-Type',
-    'Authorization'
-  ]
 };
 
 app.use(cors(corsOptions));
