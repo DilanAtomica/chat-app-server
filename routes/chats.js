@@ -5,15 +5,6 @@ const axios = require("axios");
 const mysql = require("mysql2");
 const { validationResult, body, query } = require('express-validator');
 
-/*const pool = mysql.createPool({
-    host: "127.0.0.1",
-    user: "root",
-    password: "",
-    database: "chatapp",
-}).promise();
-
- */
-
 const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
 
 router.post("/chatQueue", validateToken, body(["seriesID", "season", "episode"]).trim().notEmpty().isInt().isNumeric(), async(req, res) => {
@@ -67,11 +58,11 @@ router.post("/chatQueue", validateToken, body(["seriesID", "season", "episode"])
                 await pool.query("INSERT INTO notifications (userID, notificMsg) VALUES (?, ?)",
                     [existingQueue[0][0].userID, notificationText]);
 
-                res.status(200).json({message: "Success!"});
+                res.status(200).json({message: "Success!", chatCreated: true});
             } else {
                 await pool.query("INSERT INTO chat_queue (userID, seriesID, season, episode) VALUES (?, ?, ?, ?)",
                     [req.tokenData.id, seriesID, season, episode]);
-                res.status(200).json({message: "Success!"});
+                res.status(200).json({message: "Success!", chatCreated: false});
             }
         } else res.status(400).json({message: "Body data is invalid"});
     } catch(error) {

@@ -8,15 +8,6 @@ const mysql = require("mysql2");
 const {loginValidation, registerValidation} = require("../validationSchemas");
 require('dotenv').config()
 
-/*const pool = mysql.createPool({
-    host: "127.0.0.1",
-    user: "root",
-    password: "",
-    database: "chatapp",
-}).promise();
-
- */
-
 const pool = mysql.createConnection(process.env.DATABASE_URL).promise();
 
 router.get("/userDetails", validateToken, async(req, res) => {
